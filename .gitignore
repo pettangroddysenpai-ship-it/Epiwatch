@@ -1,0 +1,28 @@
+# Dépendances
+node_modules/
+*.log
+npm-debug.log*
+
+# Base de données locale et données de démonstration
+server/data/
+*.db
+*.db-wal
+*.db-shm
+
+# Certificats HTTPS auto-signés générés localement
+*.pem
+
+# Build
+web/dist/
+dist/
+
+# Environnement
+.env
+.env.local
+
+# OS / éditeurs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp

@@ -1,0 +1,22 @@
+{
+  "name": "epiwatch-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ÉpiWatch backend — API REST + temps réel (SSE) pour la surveillance épidémiologique",
+  "type": "module",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/index.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch src/index.js",
+    "seed": "node --disable-warning=ExperimentalWarning src/seed.js --reset",
+    "recompute": "node --disable-warning=ExperimentalWarning src/seed.js --recompute"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "selfsigned": "^2.4.1",
+    "web-push": "^3.6.7"
+  }
+}

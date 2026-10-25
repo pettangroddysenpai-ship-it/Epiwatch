@@ -1,0 +1,26 @@
+{
+  "name": "ÉpiWatch",
+  "short_name": "ÉpiWatch",
+  "description": "Suivi en temps réel des cas de maladies par hôpital, carte interactive et alertes épidémiologiques.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#5363CA",
+  "categories": ["health", "medical", "government"],
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Carte des alertes", "short_name": "Carte", "url": "/map" },
+    { "name": "Saisie des cas", "short_name": "Saisie", "url": "/entry" },
+    { "name": "Alertes", "short_name": "Alertes", "url": "/alerts" }
+  ]
+}
