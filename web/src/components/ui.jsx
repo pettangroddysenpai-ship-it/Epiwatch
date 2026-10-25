@@ -14,12 +14,16 @@ export function LevelBadge({ level, withLabel = false, lang = 'fr', size = 'md' 
 }
 
 /** Carte statistique. */
-export function StatCard({ label, value, sub, tone = 'default', accent, icon: Icon }) {
+export function StatCard({ label, value, sub, tone = 'default', accent, icon: Icon, iconTone = 'blue' }) {
   return (
     <div className={`stat${accent ? ' accent' : ''}`}>
       <div className="stat-label">
-        {Icon && <Icon style={{ width: 15, height: 15 }} />}
-        {label}
+        {Icon && (
+          <span className={`stat-icon ${iconTone}`}>
+            <Icon style={{ width: 15, height: 15 }} />
+          </span>
+        )}
+        <span className="stat-label-text">{label}</span>
       </div>
       <div className="stat-value" style={tone !== 'default' ? { color: tone } : undefined}>
         {value}

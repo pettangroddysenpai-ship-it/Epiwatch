@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -11,10 +11,9 @@ import { Page, Topbar, ConnectionBanner } from '../components/Shell.jsx';
 import { StatCard, LevelBadge, Bar as MiniBar } from '../components/ui.jsx';
 import { LEVELS, levelInfo, levelColor, severityClass } from '../lib/ui.js';
 import {
-  IconBell, IconUsers, IconTrend, IconHospital, IconAlert, IconGlobe, IconActivity, IconMap,
+  IconBell, IconUsers, IconTrend, IconHospital, IconAlert, IconGlobe, IconActivity, IconMap, IconClock, IconRefresh,
 } from '../components/Icons.jsx';
 import { usePolling } from '../lib/hooks.js';
-import { useState } from 'react';
 
 const LEVEL_LABELS_FR = ['Aucun', 'Stable', 'À surveiller', 'Préoccupant', 'Élevé', 'Critique', 'Majeur'];
 const LEVEL_LABELS_EN = ['None', 'Stable', 'Monitor', 'Concerning', 'High', 'Critical', 'Major'];
@@ -28,10 +27,6 @@ export function DashboardPage() {
   usePolling(() => {
     api.timeseries({ days: 30 }).then((r) => setSeries(r.series)).catch(() => undefined);
   }, 60000, series.length === 0);
-
-  if (overview && series.length === 0) {
-    api.timeseries({ days: 30 }).then((r) => setSeries(r.series)).catch(() => undefined);
-  }
 
   const levelData = useMemo(
     () =>
@@ -60,6 +55,7 @@ export function DashboardPage() {
 
   const openAlerts = alerts.filter((a) => a.status !== 'resolved').slice(0, 6);
   const maxDisease = Math.max(1, ...diseaseData.map((d) => d.active));
+  const hasTrendData = trendData.some((d) => Number(d.new_cases) > 0 || Number(d.under_care) > 0);
 
   const chartGrid = 'rgba(148,163,184,0.13)';
   const chartAxis = { stroke: '#6b7f9e', fontSize: 11.5 };
@@ -68,10 +64,11 @@ export function DashboardPage() {
     <>
       <Topbar
         title={t('dash.title')}
-        subtitle={overview ? `${t('common.lastUpdate')} ${timeAgo(overview.generated_at, lang)}` : undefined}
+        subtitle={t('app.shortTagline')}
         actions={
-          <button className="btn sm" onClick={() => { refresh(); reloadReference(); }}>
-            {t('common.refresh')}
+          <button className="btn sm refresh-btn" onClick={() => { refresh(); reloadReference(); }} aria-label={t('common.refresh')}>
+            <IconRefresh className="refresh-ico" />
+            <span className="refresh-text">{t('common.refresh')}</span>
           </button>
         }
       />
@@ -83,11 +80,19 @@ export function DashboardPage() {
           </div>
         ) : (
           <>
+            <div className="dash-update" role="status">
+              <span className="dash-update-icon"><IconClock /></span>
+              <span>
+                {t('dash.lastUpdate')} : {timeAgo(overview.generated_at, lang)}
+              </span>
+            </div>
+
             {/* ── KPI ── */}
             <div className="grid grid-5" style={{ marginBottom: 16 }}>
               <StatCard
                 accent
                 icon={IconBell}
+                iconTone="blue"
                 label={t('dash.activeAlerts')}
                 value={formatNumber(alertCounts.active, lang)}
                 sub={`${alertCounts.critical} ${t('dash.critical').toLowerCase()}`}
@@ -95,24 +100,28 @@ export function DashboardPage() {
               />
               <StatCard
                 icon={IconUsers}
+                iconTone="green"
                 label={t('dash.followedPatients')}
                 value={formatNumber(overview.total_active, lang)}
                 sub={`${formatNumber(overview.new_cases_window, lang)} ${t('common.newCases').toLowerCase()} (${overview.config.windowDays || 7} ${t('common.days')})`}
               />
               <StatCard
                 icon={IconHospital}
+                iconTone="violet"
                 label={t('dash.hospitalsMonitored')}
                 value={formatNumber(overview.hospitals, lang)}
                 sub={`${overview.diseases} ${t('common.diseases').toLowerCase()}`}
               />
               <StatCard
                 icon={IconGlobe}
+                iconTone="orange"
                 label={t('common.region')}
                 value={formatNumber(overview.regions.length, lang)}
                 sub={`${alertCounts.regional} ${t('public.zoneAlert').toLowerCase()}`}
               />
               <StatCard
                 icon={IconAlert}
+                iconTone="red"
                 label={t('common.deaths')}
                 value={formatNumber(overview.deaths_window, lang)}
                 sub={`${t('report.period')}: ${overview.config.windowDays || 7} ${t('common.days')}`}
@@ -121,37 +130,44 @@ export function DashboardPage() {
 
             {/* ── Graphiques ── */}
             <div className="grid grid-2" style={{ marginBottom: 16 }}>
-              <div className="card">
+              <div className="card trend-card">
                 <div className="card-head">
+                  <span className="stat-icon blue chart-icon-mobile">
+                    <IconTrend style={{ width: 17, height: 17 }} />
+                  </span>
                   <div>
                     <h3>{t('dash.trend')}</h3>
                     <p>{t('report.period')}: 30 {t('common.days')}</p>
                   </div>
-                  <IconTrend style={{ width: 18, height: 18, color: 'var(--primary)' }} />
+                  <IconTrend className="chart-head-icon" style={{ width: 18, height: 18, color: 'var(--primary)' }} />
                 </div>
-                <div style={{ height: 230 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={trendData} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="gradCases" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.55} />
-                          <stop offset="100%" stopColor="#22d3ee" stopOpacity={0.02} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid stroke={chartGrid} vertical={false} />
-                      <XAxis dataKey="label" {...chartAxis} tickLine={false} axisLine={false} />
-                      <YAxis {...chartAxis} tickLine={false} axisLine={false} width={46} />
-                      <Tooltip
-                        contentStyle={{
-                          background: '#111c33', border: '1px solid #23324f', borderRadius: 9,
-                          fontSize: 12.5, color: '#e6edf7',
-                        }}
-                        formatter={(v, n) => [formatNumber(v, lang), n === 'new_cases' ? t('common.newCases') : t('common.underCare')]}
-                      />
-                      <Area type="monotone" dataKey="new_cases" stroke="#22d3ee" strokeWidth={2.2} fill="url(#gradCases)" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
+                {hasTrendData ? (
+                  <div className="chart-body">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={trendData} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="gradCases" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.55} />
+                            <stop offset="100%" stopColor="#22d3ee" stopOpacity={0.02} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid stroke={chartGrid} vertical={false} />
+                        <XAxis dataKey="label" {...chartAxis} tickLine={false} axisLine={false} />
+                        <YAxis {...chartAxis} tickLine={false} axisLine={false} width={46} />
+                        <Tooltip
+                          contentStyle={{
+                            background: '#111c33', border: '1px solid #23324f', borderRadius: 9,
+                            fontSize: 12.5, color: '#e6edf7',
+                          }}
+                          formatter={(v, n) => [formatNumber(v, lang), n === 'new_cases' ? t('common.newCases') : t('common.underCare')]}
+                        />
+                        <Area type="monotone" dataKey="new_cases" stroke="#22d3ee" strokeWidth={2.2} fill="url(#gradCases)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="chart-empty">{t('dash.noData')}</div>
+                )}
               </div>
 
               <div className="card">

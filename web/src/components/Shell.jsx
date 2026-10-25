@@ -144,17 +144,17 @@ export function Topbar({ title, subtitle, actions, onOpenMenu }) {
       <div className="spacer" />
       <span className={`live-dot${isConnected ? '' : ' off'}`}>
         <span className="pulse-ring" />
-        <span className="hide-sm">{isConnected ? t('live.connected') : t('live.reconnecting')}</span>
+        <span className="hide-sm">{isConnected ? t('live.now') : t('live.reconnecting')}</span>
       </span>
       <button
-        className="btn sm ghost"
+        className="btn sm ghost lang-btn"
         onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}
         title={lang === 'fr' ? 'Switch to English' : 'Passer en français'}
       >
-        <span style={{ fontWeight: 800, fontSize: 12 }}>{lang === 'fr' ? 'EN' : 'FR'}</span>
+        <span className="lang-code">{lang === 'fr' ? 'EN' : 'FR'}</span>
       </button>
       <button
-        className="icon-btn"
+        className="icon-btn bell-btn"
         onClick={() => navigate('/notifications')}
         title={t('notif.title')}
         aria-label={t('notif.title')}

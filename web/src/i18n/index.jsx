@@ -10,6 +10,7 @@ const STRINGS = {
     'app.name': 'ÉpiWatch',
     'app.tagline': 'Surveillance sanitaire et alerte épidémiologique en temps réel',
     'app.org': 'ÉpiWatch Cameroun',
+    'app.shortTagline': 'Surveillance sanitaire',
     'nav.dashboard': 'Tableau de bord',
     'nav.map': 'Carte des hôpitaux',
     'nav.entry': 'Saisie des cas',
@@ -109,7 +110,9 @@ const STRINGS = {
     'level.6.title': 'Alerte majeure',
     'level.6.action': 'Escalade vers les autorités sanitaires compétentes',
 
-    'dash.title': 'Tableau de bord général',
+    'dash.title': 'Tableau de bord',
+    'dash.lastUpdate': 'Mise à jour la plus récente',
+    'dash.noData': 'Aucune donnée pour le moment',
     'dash.subtitle': 'Vue d’ensemble de la situation épidémiologique',
     'dash.activeAlerts': 'Alertes actives',
     'dash.critical': 'Critiques (niveau 5+)',
@@ -199,6 +202,7 @@ const STRINGS = {
     'report.since': 'Depuis',
     'report.period': 'Période',
 
+    'live.now': 'En direct',
     'live.connected': 'Connecté au flux temps réel',
     'live.disconnected': 'Connexion temps réel interrompue',
     'live.reconnecting': 'Reconnexion…',
@@ -209,6 +213,7 @@ const STRINGS = {
     'app.name': 'ÉpiWatch',
     'app.tagline': 'Real-time health surveillance and outbreak alerting',
     'app.org': 'ÉpiWatch Cameroon',
+    'app.shortTagline': 'Health surveillance',
     'nav.dashboard': 'Dashboard',
     'nav.map': 'Hospital map',
     'nav.entry': 'Case entry',
@@ -308,7 +313,9 @@ const STRINGS = {
     'level.6.title': 'Major alert',
     'level.6.action': 'Escalate to competent health authorities',
 
-    'dash.title': 'General dashboard',
+    'dash.title': 'Dashboard',
+    'dash.lastUpdate': 'Most recent update',
+    'dash.noData': 'No data for the moment',
     'dash.subtitle': 'Overview of the epidemiological situation',
     'dash.activeAlerts': 'Active alerts',
     'dash.critical': 'Critical (level 5+)',
@@ -398,6 +405,7 @@ const STRINGS = {
     'report.since': 'Since',
     'report.period': 'Period',
 
+    'live.now': 'Live',
     'live.connected': 'Connected to the real-time stream',
     'live.disconnected': 'Real-time connection lost',
     'live.reconnecting': 'Reconnecting…',
