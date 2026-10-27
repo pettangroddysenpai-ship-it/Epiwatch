@@ -211,7 +211,18 @@ const OUTBREAKS = [
   { disease: 'malaria', hospitals: ['CHUBA', 'HRBA', 'HDK'], rampDays: 20, maxMult: 1.9 },
 ];
 
-const BASE_NEW = { cholera: 3, covid19: 2, malaria: 14, typhoid: 4 };
+const BASE_NEW = {
+  cholera: 3,
+  covid19: 2,
+  malaria: 14,
+  typhoid: 4,
+  dengue: 5,
+  yellow_fever: 2,
+  measles: 3,
+  tuberculosis: 4,
+  meningitis: 2,
+  other: 1,
+};
 const TYPE_FACTOR = { central: 1.7, regional: 1.35, district: 1.0, clinic: 0.6, private: 0.7 };
 
 function outbreakMultiplier(diseaseCode, hospitalCode, daysAgo) {
