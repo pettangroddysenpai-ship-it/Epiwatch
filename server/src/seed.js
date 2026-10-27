@@ -299,7 +299,7 @@ export function seed({ reset = false, days = 56, noDemo = false } = {}) {
       });
     }
 
-    /* Utilisateurs - only admin account */
+    /* Utilisateurs - only admin account, no demo users */
     const users = [
       // Administrateur : gere les comptes, les grades et la configuration.
       {
@@ -320,6 +320,8 @@ export function seed({ reset = false, days = 56, noDemo = false } = {}) {
       );
       userIds.set(u.email, res.lastInsertRowid);
     }
+
+    /* No case reports or alerts - clean database for manual entry */
 
     /* Parametres par defaut */
     setSetting('window_days', DEFAULT_WINDOW_DAYS);
