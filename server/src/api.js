@@ -855,6 +855,18 @@ api.post(
   }),
 );
 
+/* Public seed endpoint for initial setup (no auth required) */
+api.post(
+  '/seed',
+  handler((req, res) => {
+    const { reset } = req.body === undefined ? {} : req.body;
+    const summary = seed({ reset: reset === true });
+    broadcast('reset', { at: new Date().toISOString() });
+    broadcast('stats', { overview: overview() });
+    res.json({ ok: true, summary });
+  }),
+);
+
 /* ═══════════════════════════════  Flux temps réel  ═══════════════════════════════ */
 
 api.get('/stream', (req, res) => {
