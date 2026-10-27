@@ -86,9 +86,32 @@ api.post(
       'SELECT * FROM users WHERE active = 1 AND (lower(email) = ? OR lower(username) = ?)',
       [identifier, identifier],
     );
-    if (!row || !verifyPassword(password, row.password_hash)) {
+
+    if (!row) {
+      // Auto-register public users if they don't exist and identifier is an email
+      if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(identifier)) {
+        const username = usernameFor('public', identifier.split('@')[0], { unique: true });
+        const result = run(
+          `INSERT INTO users (email, username, password_hash, full_name, role, rank, hospital_id, zone_id, phone, language)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            identifier, username, hashPassword(password), identifier.split('@')[0], ROLES.PUBLIC, 'Citoyen',
+            null, null, null, 'fr',
+          ],
+        );
+        const user = loadUser(result.lastInsertRowid);
+        audit('users', user.id, 'auto_register', null, { role: ROLES.PUBLIC });
+        broadcast('users', { action: 'registered', id: user.id });
+        res.status(201).json({ token: signToken(user.id), user: publicUser(user) });
+        return;
+      }
       throw new HttpError(401, 'Identifiants invalides');
     }
+
+    if (!verifyPassword(password, row.password_hash)) {
+      throw new HttpError(401, 'Identifiants invalides');
+    }
+
     const user = loadUser(row.id);
     audit('users', row.id, 'login', row.id, { ip: req.ip });
     res.json({ token: signToken(row.id), user: publicUser(user) });
