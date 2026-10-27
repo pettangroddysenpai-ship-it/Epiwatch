@@ -12,7 +12,8 @@ export function useRealtime(onEvent, { enabled = true } = {}) {
   const connect = useCallback(() => {
     if (!enabled) return undefined;
 
-    const source = new EventSource('/api/stream');
+    const API_BASE = import.meta.env.VITE_API_URL || '/api';
+    const source = new EventSource(`${API_BASE}/stream`);
     let closed = false;
 
     source.addEventListener('open', () => setStatus('connected'));
