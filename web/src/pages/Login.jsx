@@ -38,14 +38,55 @@ export function LoginPage() {
     setError('');
     setBusy(true);
     try {
-      // Google sign-in will be handled by the Google Identity Services
-      // This is a placeholder - actual implementation requires Google Client ID
-      setError('Google sign-in requires Google Client ID configuration. See .env.example for setup.');
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      if (!clientId) {
+        setError('Google Client ID not configured');
+        setBusy(false);
+        return;
+      }
+
+      // Load Google Identity Services
+      const google = await loadGoogleScript();
+      
+      google.accounts.id.initialize({
+        client_id: clientId,
+        callback: async (response) => {
+          try {
+            const { token, user } = await api.googleSignIn(response.credential);
+            setToken(token);
+            setUser(user);
+            navigate(homeFor(user), { replace: true });
+          } catch (err) {
+            setError(err.message || 'Google sign-in failed');
+            setBusy(false);
+          }
+        },
+      });
+
+      google.accounts.id.prompt((notification) => {
+        if (notification.isNotDisplayed()) {
+          setError('Google sign-in popup was blocked');
+          setBusy(false);
+        }
+      });
     } catch (err) {
       setError(err.message || 'Google sign-in failed');
-    } finally {
       setBusy(false);
     }
+  };
+
+  const loadGoogleScript = () => {
+    return new Promise((resolve, reject) => {
+      if (window.google) {
+        resolve(window.google);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.onload = () => resolve(window.google);
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
   };
 
   return (

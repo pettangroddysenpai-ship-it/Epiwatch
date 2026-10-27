@@ -53,6 +53,7 @@ export const api = {
   login: (identifier, password) =>
     request('POST', '/auth/login', { identifier, email: identifier, password }, { auth: false }),
   register: (payload) => request('POST', '/auth/register', payload, { auth: false }),
+  googleSignIn: (idToken) => request('POST', '/auth/google', { id_token: idToken }, { auth: false }),
   me: () => request('GET', '/auth/me'),
   updateMe: (payload) => request('PATCH', '/auth/me', payload),
 

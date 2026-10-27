@@ -1,4 +1,5 @@
 import express from 'express';
+import crypto from 'node:crypto';
 import { all, get, run, transaction } from './db.js';
 import {
   hashPassword,
@@ -154,6 +155,66 @@ api.post(
 api.get('/auth/me', requireAuth, (req, res) => {
   res.json({ user: publicUser(loadUser(req.user.id)) });
 });
+
+api.post(
+  '/auth/google',
+  handler(async (req, res) => {
+    const { OAuth2Client } = await import('google-auth-library');
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    
+    if (!clientId) {
+      throw new HttpError(500, 'Google Client ID not configured on server');
+    }
+
+    const idToken = str(req.body?.id_token, 2000);
+    if (!idToken) {
+      throw badRequest('Google ID token required');
+    }
+
+    const client = new OAuth2Client(clientId);
+    let payload;
+    try {
+      const ticket = await client.verifyIdToken({
+        idToken,
+        audience: clientId,
+      });
+      payload = ticket.getPayload();
+    } catch (err) {
+      throw new HttpError(401, 'Invalid Google token');
+    }
+
+    if (!payload || !payload.email) {
+      throw new HttpError(401, 'Invalid Google token payload');
+    }
+
+    const email = payload.email.toLowerCase();
+    const fullName = payload.name || email.split('@')[0];
+
+    // Check if user exists
+    let row = get('SELECT * FROM users WHERE lower(email) = ?', [email]);
+
+    if (!row) {
+      // Auto-register public user
+      const username = usernameFor('public', email.split('@')[0], { unique: true });
+      const result = run(
+        `INSERT INTO users (email, username, password_hash, full_name, role, rank, hospital_id, zone_id, phone, language)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          email, username, hashPassword(crypto.randomBytes(32).toString('hex')), fullName, ROLES.PUBLIC, 'Citoyen',
+          null, null, null, 'fr',
+        ],
+      );
+      row = get('SELECT * FROM users WHERE id = ?', [result.lastInsertRowid]);
+      audit('users', row.id, 'google_register', null, { role: ROLES.PUBLIC });
+      broadcast('users', { action: 'registered', id: row.id });
+    } else {
+      audit('users', row.id, 'google_login', row.id, { ip: req.ip });
+    }
+
+    const user = loadUser(row.id);
+    res.json({ token: signToken(row.id), user: publicUser(user) });
+  }),
+);
 
 api.patch(
   '/auth/me',

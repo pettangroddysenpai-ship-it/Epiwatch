@@ -16,6 +16,7 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.19.2",
+    "google-auth-library": "^9.0.0",
     "selfsigned": "^2.4.1",
     "web-push": "^3.6.7"
   }
