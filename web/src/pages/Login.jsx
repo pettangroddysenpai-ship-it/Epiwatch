@@ -154,7 +154,7 @@ export function LoginPage() {
         <div className="auth-box">
           <h2>{t('auth.signIn')}</h2>
           <p className="sub">
-            {lang === 'fr' ? 'Entrez votre identifiant et mot de passe' : 'Enter your identifier and password'}
+            {lang === 'fr' ? 'Entrez votre email et mot de passe' : 'Enter your email and password'}
           </p>
 
           {error && (
@@ -165,9 +165,10 @@ export function LoginPage() {
 
           <form onSubmit={submit}>
             <div className="field">
-              <label htmlFor="identifier">{lang === 'fr' ? 'Identifiant ou Email' : 'Identifier or Email'}</label>
+              <label htmlFor="identifier">{lang === 'fr' ? 'Email' : 'Email'}</label>
               <input
                 id="identifier"
+                type="email"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 required

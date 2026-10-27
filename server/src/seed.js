@@ -299,13 +299,7 @@ export function seed({ reset = false, days = 56, noDemo = false } = {}) {
       });
     }
 
-    /* Utilisateurs de demonstration (modele a 3 roles : admin / agent / public) */
-    const douala = hospitalIds.get('HCD');
-    const yaounde = hospitalIds.get('HCY');
-    const bafoussam = hospitalIds.get('HRB');
-    const maroua = hospitalIds.get('HRMR');
-    const littoral = regionIds.get('LIT');
-
+    /* Utilisateurs - only admin account */
     const users = [
       // Administrateur : gere les comptes, les grades et la configuration.
       {
@@ -313,43 +307,6 @@ export function seed({ reset = false, days = 56, noDemo = false } = {}) {
         name: 'Administrateur ÉpiWatch', role: 'admin', rank: 'Administrateur',
       },
     ];
-
-    // Only add demo users and case reports if not in noDemo mode
-    if (!noDemo) {
-      users.push(
-        // Infirmiers rattaches a un hopital : compteur court « inf.<code hopital> ».
-        {
-          email: 'agent.douala@epiwatch.cm',
-          username: usernameFor('agent', 'Hôpital Central de Douala', { hospitalCode: 'HCD' }),
-          pass: 'Agent@2026', name: 'Dr. Tchoumi', role: 'agent', rank: 'Infirmier',
-          hospital_id: douala,
-        },
-        {
-          email: 'agent.yaounde@epiwatch.cm',
-          username: usernameFor('agent', 'Hôpital Central de Yaoundé', { hospitalCode: 'HCY' }),
-          pass: 'Agent@2026', name: 'Dr. Mballa', role: 'agent', rank: 'Infirmier',
-          hospital_id: yaounde,
-        },
-        {
-          email: 'agent.bafoussam@epiwatch.cm',
-          username: usernameFor('agent', 'Hôpital Régional de Bafoussam', { hospitalCode: 'HRB' }),
-          pass: 'Agent@2026', name: 'Dr. Kamdem', role: 'agent', rank: 'Infirmier',
-          hospital_id: bafoussam,
-        },
-        {
-          email: 'agent.maroua@epiwatch.cm',
-          username: usernameFor('agent', 'Hôpital Régional de Maroua', { hospitalCode: 'HRMR' }),
-          pass: 'Agent@2026', name: 'Dr. Ali', role: 'agent', rank: 'Infirmier',
-          hospital_id: maroua,
-        },
-        // Public : citoyen abonne aux alertes (connexion par email ou compte public).
-        {
-          email: 'public@epiwatch.cm', username: 'public.citoyen', pass: 'Public@2026',
-          name: 'Citoyen — Abonné aux alertes', role: 'public', rank: 'Citoyen',
-          zone_id: littoral,
-        },
-      );
-    }
 
     const userIds = new Map();
     for (const u of users) {
@@ -362,64 +319,6 @@ export function seed({ reset = false, days = 56, noDemo = false } = {}) {
         ],
       );
       userIds.set(u.email, res.lastInsertRowid);
-    }
-    const agentIds = ['agent.douala@epiwatch.cm', 'agent.yaounde@epiwatch.cm', 'agent.bafoussam@epiwatch.cm']
-      .map((e) => userIds.get(e));
-
-    /* Abonnement du public : suit la région Littoral à partir du niveau 3. */
-    if (!noDemo) {
-      run(
-        `INSERT INTO subscriptions (user_id, zone_id, min_level, channel)
-         VALUES (?, ?, 3, 'push')`,
-        [userIds.get('public@epiwatch.cm'), littoral],
-      );
-    }
-
-    /* Historique de declarations (fictif) - only if not in noDemo mode */
-    if (!noDemo) {
-      const today = new Date();
-      today.setHours(12, 0, 0, 0);
-
-      const insertReport = (hospitalId, diseaseId, date, newCases, underCare, deaths, recovered, createdBy) => {
-        run(
-          `INSERT INTO case_reports (hospital_id, disease_id, report_date, new_cases,
-                                     patients_under_care, deaths, recovered, created_by, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [hospitalId, diseaseId, date, newCases, underCare, deaths, recovered, createdBy,
-            `${date} 08:30:00`, `${date} 08:30:00`],
-        );
-      };
-
-      const tracking = new Map(); // `${hospId}:${disId}` -> active
-      for (let i = days - 1; i >= 0; i--) {
-        const day = new Date(today);
-        day.setDate(day.getDate() - i);
-        const date = iso(day);
-        const weekday = day.getDay();
-        const weekly = weekday === 0 || weekday === 6 ? 1.18 : 1; // leger pic le week-end
-
-        for (const h of HOSPITALS) {
-          const hospId = hospitalIds.get(h.code);
-          for (const d of DISEASES) {
-            const disId = diseaseIds.get(d.code);
-            const key = `${hospId}:${disId}`;
-            if (!tracking.has(key)) tracking.set(key, rint(0, Math.round(BASE_NEW[d.code] * TYPE_FACTOR[h.type])));
-            let active = tracking.get(key);
-
-            const base = BASE_NEW[d.code] * TYPE_FACTOR[h.type];
-            const mult = outbreakMultiplier(d.code, h.code, i);
-            const noise = 0.55 + rand() * 0.9;
-            const newCases = Math.max(0, Math.round(base * mult * noise * weekly));
-
-            const recovered = Math.min(active + newCases, Math.round(active * 0.55 * (0.7 + rand() * 0.6)));
-            const deaths = rand() < 0.08 ? rint(0, 1) : 0;
-            active = Math.max(0, active + newCases - recovered - deaths);
-            tracking.set(key, active);
-
-            insertReport(hospId, disId, date, newCases, active, deaths, recovered, agentIds[i % agentIds.length]);
-          }
-        }
-      }
     }
 
     /* Parametres par defaut */
