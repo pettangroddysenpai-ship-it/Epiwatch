@@ -20,6 +20,7 @@ const STRINGS = {
     'nav.notifications': 'Notifications',
     'nav.public': 'Espace public',
     'nav.about': 'À propos',
+    'nav.profile': 'Profil',
     'nav.live': 'Temps réel',
     'nav.online': 'En ligne',
     'nav.offline': 'Hors ligne',
@@ -30,6 +31,7 @@ const STRINGS = {
 
     'auth.login': 'Connexion',
     'auth.logout': 'Déconnexion',
+    'auth.logoutConfirm': 'Voulez-vous vraiment vous déconnecter ?',
     'auth.email': 'Adresse e-mail',
     'auth.identifier': 'Compte / e-mail',
     'auth.identifierHint': 'Ex. inf.hcd ou agent@hopital.cm',
@@ -223,6 +225,7 @@ const STRINGS = {
     'nav.notifications': 'Notifications',
     'nav.public': 'Public space',
     'nav.about': 'About',
+    'nav.profile': 'Profile',
     'nav.live': 'Real time',
     'nav.online': 'Online',
     'nav.offline': 'Offline',
@@ -233,6 +236,7 @@ const STRINGS = {
 
     'auth.login': 'Sign in',
     'auth.logout': 'Sign out',
+    'auth.logoutConfirm': 'Are you sure you want to log out?',
     'auth.email': 'Email address',
     'auth.identifier': 'Account / email',
     'auth.identifierHint': 'e.g. inf.hcd or nurse@hospital.cm',

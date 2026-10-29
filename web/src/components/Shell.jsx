@@ -45,58 +45,43 @@ export function MobileTop({ onOpenMenu, title }) {
 
 export function MobileNav() {
   const { t } = useI18n();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { alertCounts } = useStore();
+  const navigate = useNavigate();
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
   const showEntry = canReport(user);
   const publicView = isPublic(user);
 
-  const leftItems = [
+  const navItems = [
     publicView
       ? { to: '/public', icon: IconDashboard, label: t('nav.public') }
       : { to: '/', end: true, icon: IconDashboard, label: t('nav.dashboard') },
-  ];
-
-  const centerItem = { to: '/map', icon: IconMap, label: t('nav.map'), center: true };
-
-  const rightItems = [
-    showEntry && { to: '/entry', icon: IconEntry, label: t('nav.entry') },
+    { to: '/map', icon: IconMap, label: t('nav.map') },
+    ...(showEntry ? [{ to: '/entry', icon: IconEntry, label: t('nav.entry') }] : []),
     { to: '/alerts', icon: IconBell, label: t('nav.alerts'), badge: alertCounts.active },
     canManage(user)
       ? { to: '/admin', icon: IconSettings, label: t('nav.admin') }
       : { to: '/notifications', icon: IconPulse, label: t('nav.notifications') },
-  ].filter(Boolean);
+  ];
+
+  const handleLogout = () => {
+    if (window.confirm(t('auth.logoutConfirm') || 'Are you sure you want to log out?')) {
+      logout();
+      navigate('/login');
+    }
+    setShowProfileMenu(false);
+  };
+
+  const getInitialLetter = (name) => {
+    if (!name) return '?';
+    return name.charAt(0).toUpperCase();
+  };
 
   return (
-    <nav className="mobile-nav">
-      <div className="mobile-nav-left">
-        {leftItems.map(({ to, icon: Icon, label, end }) => (
-          <NavLink key={to} to={to} end={end} className={({ isActive }) => (isActive ? 'active' : '')}>
-            <Icon />
-            {label}
-          </NavLink>
-        ))}
-      </div>
-      <div className="mobile-nav-center">
-        <NavLink to={centerItem.to} className={({ isActive }) => (isActive ? 'active' : '')}>
-          <span style={{ position: 'relative' }}>
-            <centerItem.icon />
-            {centerItem.badge > 0 && (
-              <span
-                style={{
-                  position: 'absolute', top: -4, right: -8, background: 'var(--danger)', color: '#fff',
-                  fontSize: 9, fontWeight: 800, minWidth: 15, height: 15, borderRadius: 8,
-                  display: 'grid', placeItems: 'center', padding: '0 3px',
-                }}
-              >
-                {centerItem.badge > 9 ? '9+' : centerItem.badge}
-              </span>
-            )}
-          </span>
-          {centerItem.label}
-        </NavLink>
-      </div>
-      <div className="mobile-nav-right">
-        {rightItems.map(({ to, icon: Icon, label, badge, end }) => (
+    <>
+      <nav className="mobile-nav">
+        {navItems.map(({ to, icon: Icon, label, badge, end }) => (
           <NavLink key={to} to={to} end={end} className={({ isActive }) => (isActive ? 'active' : '')}>
             <span style={{ position: 'relative' }}>
               <Icon />
@@ -115,8 +100,34 @@ export function MobileNav() {
             {label}
           </NavLink>
         ))}
-      </div>
-    </nav>
+        {user && (
+          <button
+            className="mobile-nav-profile"
+            onClick={() => setShowProfileMenu(!showProfileMenu)}
+            aria-label="Profile"
+          >
+            <span className="profile-avatar">{getInitialLetter(user.full_name)}</span>
+            <span className="profile-label">{t('nav.profile') || 'Profile'}</span>
+          </button>
+        )}
+      </nav>
+      {showProfileMenu && user && (
+        <div className="mobile-nav-profile-menu" onClick={() => setShowProfileMenu(false)}>
+          <div className="profile-menu-content" onClick={(e) => e.stopPropagation()}>
+            <div className="profile-menu-header">
+              <span className="profile-avatar-large">{getInitialLetter(user.full_name)}</span>
+              <div>
+                <div className="profile-name">{user.full_name}</div>
+                <div className="profile-email">{user.email}</div>
+              </div>
+            </div>
+            <button className="profile-menu-item danger" onClick={handleLogout}>
+              {t('auth.logout') || 'Log out'}
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
