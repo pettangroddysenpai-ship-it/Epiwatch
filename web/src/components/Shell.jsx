@@ -49,9 +49,11 @@ export function MobileNav() {
   const { alertCounts } = useStore();
   const navigate = useNavigate();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
 
   const showEntry = canReport(user);
   const publicView = isPublic(user);
+  const showProfile = !!user && publicView;
 
   const navItems = [
     publicView
@@ -65,67 +67,104 @@ export function MobileNav() {
       : { to: '/notifications', icon: IconPulse, label: t('nav.notifications') },
   ];
 
-  const handleLogout = () => {
-    if (window.confirm(t('auth.logoutConfirm') || 'Are you sure you want to log out?')) {
-      logout();
-      navigate('/login');
-    }
+  const closeProfileMenu = () => {
     setShowProfileMenu(false);
+    setConfirmLogout(false);
+  };
+
+  const toggleProfileMenu = () => {
+    if (showProfileMenu) {
+      closeProfileMenu();
+      return;
+    }
+    setConfirmLogout(false);
+    setShowProfileMenu(true);
+  };
+
+  const handleLogout = () => {
+    closeProfileMenu();
+    logout();
+    navigate('/login', { replace: true });
   };
 
   const getInitialLetter = (name) => {
     if (!name) return '?';
-    return name.charAt(0).toUpperCase();
+    return name.trim().charAt(0).toUpperCase();
   };
 
   return (
     <>
-      <nav className="mobile-nav">
+      <nav className="mobile-nav" aria-label="Navigation">
         {navItems.map(({ to, icon: Icon, label, badge, end }) => (
           <NavLink key={to} to={to} end={end} className={({ isActive }) => (isActive ? 'active' : '')}>
-            <span style={{ position: 'relative' }}>
+            <span className="mobile-nav-ico">
               <Icon />
               {badge > 0 && (
-                <span
-                  style={{
-                    position: 'absolute', top: -4, right: -8, background: 'var(--danger)', color: '#fff',
-                    fontSize: 9, fontWeight: 800, minWidth: 15, height: 15, borderRadius: 8,
-                    display: 'grid', placeItems: 'center', padding: '0 3px',
-                  }}
-                >
+                <span className="mobile-nav-badge">
                   {badge > 9 ? '9+' : badge}
                 </span>
               )}
             </span>
-            {label}
+            <span className="mobile-nav-label">{label}</span>
           </NavLink>
         ))}
-        {user && (
+        {showProfile && (
           <button
-            className="mobile-nav-profile"
-            onClick={() => setShowProfileMenu(!showProfileMenu)}
-            aria-label="Profile"
+            type="button"
+            className={`mobile-nav-profile${showProfileMenu ? ' open' : ''}`}
+            onClick={toggleProfileMenu}
+            aria-label={t('nav.profile')}
+            aria-haspopup="dialog"
+            aria-expanded={showProfileMenu}
           >
             <span className="profile-avatar">{getInitialLetter(user.full_name)}</span>
-            <span className="profile-label">{t('nav.profile') || 'Profile'}</span>
+            <span className="profile-label">{t('nav.profile')}</span>
           </button>
         )}
       </nav>
-      {showProfileMenu && user && (
-        <div className="mobile-nav-profile-menu" onClick={() => setShowProfileMenu(false)}>
-          <div className="profile-menu-content" onClick={(e) => e.stopPropagation()}>
+      {showProfileMenu && showProfile && (
+        <>
+          <button
+            type="button"
+            className="profile-menu-backdrop"
+            aria-label={t('common.close')}
+            onClick={closeProfileMenu}
+          />
+          <div className="mobile-nav-profile-menu" role="dialog" aria-modal="true" aria-label={t('nav.profile')}>
             <div className="profile-menu-header">
               <span className="profile-avatar-large">{getInitialLetter(user.full_name)}</span>
-              <div>
+              <div className="profile-menu-who">
                 <div className="profile-name">{user.full_name}</div>
-                <div className="profile-email">{user.email}</div>
+                {user.email && <div className="profile-email">{user.email}</div>}
               </div>
             </div>
-            <button className="profile-menu-item danger" onClick={handleLogout}>
-              {t('auth.logout') || 'Log out'}
-            </button>
+            {confirmLogout ? (
+              <div className="profile-menu-confirm">
+                <p>{t('auth.logoutConfirm')}</p>
+                <div className="profile-menu-actions">
+                  <button
+                    type="button"
+                    className="profile-menu-item"
+                    onClick={() => setConfirmLogout(false)}
+                  >
+                    {t('common.cancel')}
+                  </button>
+                  <button type="button" className="profile-menu-item danger" onClick={handleLogout}>
+                    {t('auth.logout')}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="profile-menu-item danger"
+                onClick={() => setConfirmLogout(true)}
+              >
+                {t('auth.logout')}
+              </button>
+            )}
           </div>
-        </div>
+        </>
       )}
     </>
   );
