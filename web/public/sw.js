@@ -1,6 +1,6 @@
 /* ÉpiWatch — Service Worker (PWA + Web Push) */
 const VERSION = 'epiwatch-v2';
-const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icons/icon.svg'];
+const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icons/icon.svg', '/icons/icon-192.png', '/icons/icon-512.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -82,7 +82,7 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(payload.title, {
       body: payload.body,
-      icon: '/icons/icon-512.png',
+      icon: '/icons/apple-touch-icon.png',
       badge: '/icons/icon-192.png',
       tag: payload.alertId ? `epiwatch-alert-${payload.alertId}` : payload.tag || 'epiwatch-alert',
       renotify: true,
