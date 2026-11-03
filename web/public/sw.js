@@ -109,19 +109,36 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-/* L'abonnement a expiré/été renouvelé : on re-synchronise au prochain lancement. */
+/* L'abonnement a expiré/été renouvelé : on re-synchronise au prochain lancement.
+   Note: This event is not consistently supported across browsers.
+   Re-syncing is handled by syncPushSubscription() in the app on login. */
 self.addEventListener('pushsubscriptionchange', (event) => {
+  console.log('[sw] Push subscription changed');
   event.waitUntil(
     self.registration.pushManager
       .getSubscription()
       .then((subscription) => {
-        if (!subscription) return undefined;
-        return fetch('/api/push/subscribe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ subscription: subscription.toJSON() }),
-        }).catch(() => undefined);
+        if (!subscription) {
+          console.log('[sw] No subscription after change');
+          return undefined;
+        }
+        console.log('[sw] New subscription after change:', subscription.endpoint);
+        // Store in IndexedDB for later sync when app opens
+        return (async () => {
+          try {
+            const db = await self.indexedDB.open('epiwatch-push-sync', 1);
+            if (!db.objectStoreNames.contains('subscriptions')) {
+              db.createObjectStore('subscriptions');
+            }
+            const tx = db.transaction('subscriptions', 'readwrite');
+            tx.objectStore('subscriptions').put(subscription.toJSON(), 'current');
+            await tx.complete;
+            console.log('[sw] Subscription stored for later sync');
+          } catch (err) {
+            console.error('[sw] Failed to store subscription:', err);
+          }
+        })();
       })
-      .catch(() => undefined),
+      .catch((err) => console.error('[sw] Failed to handle subscription change:', err)),
   );
 });

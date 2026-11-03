@@ -9,7 +9,7 @@ import { Page, Topbar } from '../components/Shell.jsx';
 import { Empty, InlineAlert, LevelBadge } from '../components/ui.jsx';
 import { IconBell, IconCheck, IconGlobe, IconPulse, IconAlert } from '../components/Icons.jsx';
 import { levelInfo } from '../lib/ui.js';
-import { disablePush, enablePush, pushSupported, pushSecureContext } from '../lib/push.js';
+import { disablePush, enablePush, pushSupported, pushSecureContext, checkPushStatus } from '../lib/push.js';
 
 export function NotificationsPage() {
   const { t, lang } = useI18n();
@@ -22,6 +22,7 @@ export function NotificationsPage() {
   const [busy, setBusy] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
   const [feedback, setFeedback] = useState(null);
+  const [debugInfo, setDebugInfo] = useState(null);
   const pushOk = pushSupported();
   const secure = pushSecureContext();
   const [pushPerm, setPushPerm] = useState(typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'unsupported');
@@ -156,6 +157,30 @@ export function NotificationsPage() {
     setFeedback({ kind: 'info', message: lang === 'fr' ? 'Notification de test envoyée (si la page est en arrière-plan).' : 'Test notification sent (if the page is in the background).' });
   };
 
+  const runDebugCheck = async () => {
+    setFeedback(null);
+    try {
+      const status = await checkPushStatus();
+      setDebugInfo(status);
+      const issues = [];
+      if (!status.supported) issues.push('Browser does not support push');
+      if (!status.secure) issues.push('Not in secure context (HTTPS required)');
+      if (status.permission !== 'granted') issues.push(`Permission: ${status.permission}`);
+      if (!status.hasServiceWorker) issues.push('Service worker not registered');
+      if (!status.serviceWorkerReady) issues.push('Service worker not ready');
+      if (!status.hasLocalSubscription) issues.push('No local push subscription');
+      if (!status.hasServerSubscription) issues.push('No subscription registered on server');
+      
+      if (issues.length === 0) {
+        setFeedback({ kind: 'info', message: lang === 'fr' ? 'Tout semble correct !' : 'Everything looks good!' });
+      } else {
+        setFeedback({ kind: 'warn', message: issues.join(' · ') });
+      }
+    } catch (err) {
+      setFeedback({ kind: 'warn', message: err.message });
+    }
+  };
+
   const regions = useMemo(() => (zones || []).filter((z) => z.type === 'region'), [zones]);
 
   return (
@@ -213,7 +238,20 @@ export function NotificationsPage() {
                   <button className="btn sm ghost" onClick={disableSystemPush} disabled={pushBusy}>
                     {lang === 'fr' ? 'Désactiver sur cet appareil' : 'Disable on this device'}
                   </button>
+                  <button className="btn sm ghost" onClick={runDebugCheck}>
+                    {lang === 'fr' ? 'Diagnostic' : 'Debug'}
+                  </button>
                 </div>
+                {debugInfo && (
+                  <div className="card" style={{ marginTop: 10, padding: 12, fontSize: 11, background: 'var(--bg-soft)' }}>
+                    <div><strong>Supported:</strong> {debugInfo.supported ? '✓' : '✗'}</div>
+                    <div><strong>Secure (HTTPS):</strong> {debugInfo.secure ? '✓' : '✗'}</div>
+                    <div><strong>Permission:</strong> {debugInfo.permission}</div>
+                    <div><strong>Service Worker:</strong> {debugInfo.hasServiceWorker ? (debugInfo.serviceWorkerReady ? '✓ Ready' : '⚠ Not ready') : '✗'}</div>
+                    <div><strong>Local Subscription:</strong> {debugInfo.hasLocalSubscription ? '✓' : '✗'}</div>
+                    <div><strong>Server Subscriptions:</strong> {debugInfo.serverSubscriptions.length}</div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="row wrap" style={{ gap: 10 }}>
