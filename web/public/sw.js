@@ -82,13 +82,14 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(payload.title, {
       body: payload.body,
-      icon: '/icons/icon-192.png',
+      icon: '/icons/icon-512.png',
       badge: '/icons/icon-192.png',
       tag: payload.alertId ? `epiwatch-alert-${payload.alertId}` : payload.tag || 'epiwatch-alert',
       renotify: true,
       vibrate: level >= 4 ? [300, 120, 300, 120, 500] : [180, 80, 180],
       data: { url: target, alertId: payload.alertId ?? null },
       actions: [{ action: 'open', title: 'Voir les alertes' }],
+      dir: 'auto',
     }),
   );
 });
