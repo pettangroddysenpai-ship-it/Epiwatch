@@ -103,6 +103,18 @@ export function Sidebar({ open, onClose }) {
 
         <div className="nav-section">{t('nav.about')}</div>
         <NavItem to="/about" icon={IconShield} label={t('nav.about')} />
+        {canManage(user) && (
+          <NavItem
+            to="#"
+            icon={IconLogout}
+            label={t('auth.logout')}
+            onClick={(e) => {
+              e.preventDefault();
+              logout();
+              navigate('/login');
+            }}
+          />
+        )}
       </nav>
 
       <div className="sidebar-foot">
