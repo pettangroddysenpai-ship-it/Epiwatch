@@ -23,6 +23,7 @@ export function NotificationsPage() {
   const [pushBusy, setPushBusy] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [debugInfo, setDebugInfo] = useState(null);
+  const [hasLocalSubscription, setHasLocalSubscription] = useState(false);
   const pushOk = pushSupported();
   const secure = pushSecureContext();
   const [pushPerm, setPushPerm] = useState(typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'unsupported');
@@ -31,7 +32,22 @@ export function NotificationsPage() {
     if (!user) return;
     api.notifications().then((r) => setItems(r.notifications)).catch(() => undefined);
     api.subscriptions().then((r) => setSubs(r.subscriptions)).catch(() => undefined);
-  }, [user]);
+    
+    // Check local subscription status
+    if (pushOk && secure) {
+      (async () => {
+        try {
+          const reg = await navigator.serviceWorker.getRegistration('/sw.js');
+          if (reg) {
+            const sub = await reg.pushManager.getSubscription();
+            setHasLocalSubscription(!!sub);
+          }
+        } catch {
+          setHasLocalSubscription(false);
+        }
+      })();
+    }
+  }, [user, pushOk, secure]);
 
   useEffect(load, [load]);
 
@@ -77,6 +93,7 @@ export function NotificationsPage() {
     try {
       await enablePush();
       setPushPerm(Notification.permission);
+      setHasLocalSubscription(true);
       setFeedback({
         kind: 'info',
         message: lang === 'fr'
@@ -96,6 +113,7 @@ export function NotificationsPage() {
     try {
       await disablePush();
       setPushPerm(Notification.permission);
+      setHasLocalSubscription(false);
       setFeedback({
         kind: 'info',
         message: lang === 'fr' ? 'Notifications système désactivées sur cet appareil.' : 'System notifications disabled on this device.',
@@ -224,7 +242,7 @@ export function NotificationsPage() {
                   ? 'Exige HTTPS ou http://localhost. Pour tester sur un autre appareil, utilisez `npm run start:secure` (certificat auto-signé).'
                   : 'Requires HTTPS or http://localhost. To test on another device, use `npm run start:secure` (self-signed cert).'}
               </InlineAlert>
-            ) : pushPerm === 'granted' ? (
+            ) : hasLocalSubscription ? (
               <div className="col" style={{ gap: 10 }}>
                 <span className="badge lvl-1">
                   <IconCheck style={{ width: 13, height: 13 }} />
