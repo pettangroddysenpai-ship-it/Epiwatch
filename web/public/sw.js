@@ -1,6 +1,9 @@
 /* ÉpiWatch — Service Worker (PWA + Web Push) */
-const VERSION = 'epiwatch-v2';
+const VERSION = 'epiwatch-v3';
 const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icons/icon.svg', '/icons/icon-192.png', '/icons/icon-512.png'];
+
+// Embedded icon for notifications (SVG as data URI to avoid file loading issues)
+const NOTIFICATION_ICON = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjExMiIgZmlsbD0iIzUzNjNDQSIvPgogIDxjaXJjbGUgY3g9IjI1NiIgY3k9IjI0MCIgcj0iMTUwIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMTAiIG9wYWNpdHk9IjAuMTgiLz4KICA8Y2lyY2xlIGN4PSIyNTYiIGN5PSIyNDAiIHI9IjEwMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjYiIG9wYWNpdHk9IjAuNCIvPgogIDxwYXRoIGQ9Ik0xMjAgMjQwIEgxOTAgTDIxNCAxOTYgTDQ0IDMwMCBMMjcyIDE2OCBMMzAwIDI0MCBIMzkyIiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMjAiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4=';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -82,7 +85,7 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(payload.title, {
       body: payload.body,
-      icon: '/icons/apple-touch-icon.png',
+      icon: NOTIFICATION_ICON,
       badge: '/icons/icon-192.png',
       tag: payload.alertId ? `epiwatch-alert-${payload.alertId}` : payload.tag || 'epiwatch-alert',
       renotify: true,
