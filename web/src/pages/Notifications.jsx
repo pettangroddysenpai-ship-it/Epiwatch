@@ -286,23 +286,8 @@ export function NotificationsPage() {
                 )}
               </div>
             )}
-
-            {/* Fallback in-app si non activées */}
-            {pushPerm !== 'granted' && supported && (
-              <div className="divider" />
-            )}
-            {pushPerm !== 'granted' && supported && (
-              <div className="row wrap" style={{ gap: 10, alignItems: 'center' }}>
-                <span className="small faint">
-                  {lang === 'fr' ? 'Alternative : notifications dans cet onglet' : 'Fallback: in-tab notifications'}
-                </span>
-                <button className="btn sm ghost" onClick={enable} disabled={permission === 'denied'}>
-                  {t('notif.enable')}
-                </button>
-                <button className="btn sm ghost" onClick={sendTest}>{t('notif.test')}</button>
-              </div>
-            )}
           </div>
+        </div>
 
           {/* ── Abonnements par zone ── */}
           <div className="card">
@@ -348,60 +333,6 @@ export function NotificationsPage() {
               </div>
             )}
           </div>
-        </div>
-
-        {/* ── Historique ── */}
-        <div className="card">
-          <div className="card-head">
-            <div>
-              <h3>{t('notif.title')}</h3>
-              <p>{items.length} {lang === 'fr' ? 'reçues' : 'received'}</p>
-            </div>
-            {user && items.some((n) => !n.read) && (
-              <button className="btn sm" onClick={markAllRead} disabled={busy}>{t('notif.markAll')}</button>
-            )}
-          </div>
-
-          {!user ? (
-            <Empty icon={IconBell} title={lang === 'fr' ? 'Connectez-vous' : 'Sign in'} hint={lang === 'fr' ? 'Vos notifications apparaîtront ici.' : 'Your notifications will appear here.'} />
-          ) : items.length === 0 ? (
-            <Empty icon={IconPulse} title={t('notif.empty')} />
-          ) : (
-            <div className="col" style={{ gap: 8 }}>
-              {items.map((n) => (
-                <Link
-                  key={n.id}
-                  to="/alerts"
-                  className="alert-card"
-                  style={{
-                    display: 'flex',
-                    borderLeftColor: n.disease_color || levelInfo(n.level).color,
-                    opacity: n.read ? 0.6 : 1,
-                  }}
-                >
-                  <div className="alert-body">
-                    <div className="row wrap" style={{ gap: 8 }}>
-                      <LevelBadge level={n.level} lang={lang} size="sm" />
-                      <span className="bold" style={{ fontSize: 13.5 }}>{n.title}</span>
-                      {!n.read && <span className="dot" style={{ background: 'var(--danger)' }} />}
-                    </div>
-                    <div className="alert-msg">{n.body}</div>
-                    <div className="alert-meta">
-                      <span>{timeAgo(n.created_at, lang)}</span>
-                      {n.scope && (
-                        <>
-                          <span>·</span>
-                          <span>{t(`alerts.scope.${n.scope}`)}</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <IconAlert style={{ width: 16, height: 16, color: levelInfo(n.level).color, alignSelf: 'center' }} />
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
       </Page>
     </>
   );

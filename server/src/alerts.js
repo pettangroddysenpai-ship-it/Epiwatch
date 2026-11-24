@@ -351,19 +351,6 @@ function notifyAlert(alert, diseaseName) {
   const newlyNotified = [];
   for (const userId of recipientIds) {
     if (already.has(userId)) continue;
-    run(
-      `INSERT INTO notifications (user_id, alert_id, title, body, level, scope, scope_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [
-        userId,
-        alert.id,
-        title,
-        alert.message,
-        alert.level,
-        alert.scope,
-        alert.scope_id,
-      ],
-    );
     newlyNotified.push(userId);
   }
 
