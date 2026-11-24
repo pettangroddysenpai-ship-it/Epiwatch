@@ -1288,7 +1288,7 @@ th.num {
     inset: 0;
     background: radial-gradient(circle at top, rgba(15, 23, 42, 0.16), rgba(15, 23, 42, 0.46));
     backdrop-filter: blur(2px);
-    z-index: 39;
+    z-index: 999;
     border: none;
   }
   .sidebar {
@@ -1300,7 +1300,7 @@ th.num {
     transition: transform 0.24s ease;
     width: 262px;
     box-shadow: 0 30px 60px rgba(15, 23, 42, 0.18);
-    z-index: 40;
+    z-index: 1000;
   }
   .sidebar.open {
     transform: translateX(0);
